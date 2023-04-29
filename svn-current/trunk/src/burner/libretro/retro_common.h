@@ -79,7 +79,7 @@ void set_neo_system_bios();
 void evaluate_neogeo_bios_mode(const char* drvname);
 void set_environment();
 void check_variables(void);
-#ifdef USE_CYCLONE
+#if 0 //#ifdef USE_CYCLONE
 void SetSekCpuCore();
 #endif
 

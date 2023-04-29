@@ -57,7 +57,7 @@ INT32 g_audio_samplerate = 48000;
 UINT8 *diag_input;
 neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 
-#ifdef USE_CYCLONE
+#if 0 //#ifdef USE_CYCLONE
 // 0 - c68k, 1 - m68k
 // we don't use cyclone by default because it breaks savestates cross-platform compatibility (including netplay)
 int nSekCpuCore = 1;
@@ -83,7 +83,7 @@ static const struct retro_variable var_fbneo_samplerate = { "fbneo-samplerate", 
 static const struct retro_variable var_fbneo_sample_interpolation = { "fbneo-sample-interpolation", "Sample Interpolation; 4-point 3rd order|2-point 1st order|disabled" };
 static const struct retro_variable var_fbneo_fm_interpolation = { "fbneo-fm-interpolation", "FM Interpolation; 4-point 3rd order|disabled" };
 static const struct retro_variable var_fbneo_analog_speed = { "fbneo-analog-speed", "Analog Speed; 10|9|8|7|6|5|4|3|2|1" };
-#ifdef USE_CYCLONE
+#if 0 //#ifdef USE_CYCLONE
 static const struct retro_variable var_fbneo_cyclone = { "fbneo-cyclone", "Cyclone (need to quit retroarch, change savestate format, use at your own risk); disabled|enabled" };
 #endif
 
@@ -232,7 +232,7 @@ void set_environment()
 	vars_systems.push_back(&var_fbneo_sample_interpolation);
 	vars_systems.push_back(&var_fbneo_fm_interpolation);
 	vars_systems.push_back(&var_fbneo_analog_speed);
-#ifdef USE_CYCLONE
+#if 0 //#ifdef USE_CYCLONE
 	vars_systems.push_back(&var_fbneo_cyclone);
 #endif
 
@@ -527,7 +527,7 @@ void check_variables(void)
 			nAnalogSpeed = 0x0100;
 	}
 
-#ifdef USE_CYCLONE
+#if 0 //#ifdef USE_CYCLONE
 	var.key = var_fbneo_cyclone.key;
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
 	{
@@ -539,7 +539,7 @@ void check_variables(void)
 #endif
 }
 
-#ifdef USE_CYCLONE
+#if 0 //#ifdef USE_CYCLONE
 void SetSekCpuCore()
 {
 	nSekCpuCore = (bCycloneEnabled ? 0 : 1);

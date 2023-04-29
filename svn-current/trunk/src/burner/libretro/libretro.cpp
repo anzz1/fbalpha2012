@@ -586,6 +586,35 @@ static int archive_load_rom(uint8_t *dest, int *wrote, int i)
    return 0;
 }
 
+static void locate_archive(std::vector<std::string>& pathList, const char* const romName)
+{
+	static char path[MAX_PATH];
+
+	// Search rom dir
+	snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, romName);
+	if (ZipOpen(path) == 0)
+	{
+		g_find_list_path.push_back(path);
+		return;
+	}
+	// Search system fba subdirectory (where samples/hiscore are stored)
+	snprintf(path, sizeof(path), "%s%cfba%c%s", g_system_dir, slash, slash, romName);
+	if (ZipOpen(path) == 0)
+	{
+		g_find_list_path.push_back(path);
+		return;
+	}
+	// Search system directory
+	snprintf(path, sizeof(path), "%s%c%s", g_system_dir, slash, romName);
+	if (ZipOpen(path) == 0)
+	{
+		g_find_list_path.push_back(path);
+		return;
+	}
+
+	log_cb(RETRO_LOG_ERROR, "[FBA] Couldn't locate the %s archive anywhere, this game probably won't boot.\n", romName);
+}
+
 // This code is very confusing. The original code is even more confusing :(
 static bool open_archive()
 {
@@ -608,19 +637,15 @@ static bool open_archive()
 
 		log_cb(RETRO_LOG_INFO, "[FBA] Archive: %s\n", rom_name);
 
-		char path[1024];
-#if defined(_XBOX) || defined(_WIN32)
-		snprintf(path, sizeof(path), "%s\\%s", g_rom_dir, rom_name);
-#else
-		snprintf(path, sizeof(path), "%s/%s", g_rom_dir, rom_name);
-#endif
+      locate_archive(g_find_list_path, rom_name);
+      
+      // Handle bios for pgm single pcb board (special case)
+      if (strcmp(rom_name, "thegladpcb") == 0 || strcmp(rom_name, "dmnfrntpcb") == 0 || strcmp(rom_name, "svgpcb") == 0)
+      {
+         locate_archive(g_find_list_path, "pgm");
+      }
 
-		if (ZipOpen(path) != 0)
-			log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
-		else
-			g_find_list_path.push_back(path);
-
-		ZipClose();
+      ZipClose();
 	}
 
 	for (unsigned z = 0; z < g_find_list_path.size(); z++)
@@ -657,25 +682,28 @@ static bool open_archive()
 
             if (index < 0)
             {
-               index = find_rom_by_name(rom_name, list, count);
+            index = find_rom_by_name(rom_name, list, count);
+            if (index >= 0)
                bad_crc = true;
-            }
+         }
 
-			// USE UNI-BIOS...
-			if (index < 0)
-			{
-				log_cb(RETRO_LOG_WARN, "[FBA] Searching ROM at index %d with CRC 0x%08x and name %s => Not Found\n", i, g_find_list[i].ri.nCrc, rom_name);
-               continue;              
-            }
-
+         if (index >= 0)
+         {
             if (bad_crc)
-               log_cb(RETRO_LOG_WARN, "[FBA] Using ROM at index %d with wrong CRC and name %s\n", i, rom_name);
-
+               log_cb(RETRO_LOG_WARN, "[FBA] Using ROM with bad CRC and name %s from archive %s\n", rom_name, g_find_list_path[z].c_str());
+            else
+               log_cb(RETRO_LOG_INFO, "[FBA] Using ROM with good CRC and name %s from archive %s\n", rom_name, g_find_list_path[z].c_str());
+         }
+         else
+         {
 #if 0
-            log_cb(RETRO_LOG_INFO, "[FBA] Searching ROM at index %d with CRC 0x%08x and name %s => Found\n", i, g_find_list[i].ri.nCrc, rom_name);
-#endif                          
-            // Search for the best bios available by category
-            if (is_neogeo_game)
+				log_cb(RETRO_LOG_WARN, "[FBA] Searching ROM at index %d with CRC 0x%08x and name %s => Not Found\n", i, g_find_list[i].ri.nCrc, rom_name);
+#endif
+            continue;
+         }
+
+         // Search for the best bios available by category
+         if (is_neogeo_game)
             {
                RomBiosInfo *bios;
 
